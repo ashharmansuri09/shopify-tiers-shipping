@@ -1,0 +1,39 @@
+{
+    ".co.nz": {
+      "tiers": [
+        { "upper_value": 40, "cost": 8 },
+        { "upper_value": 70, "cost": 4 },
+        { "upper_value": null, "cost": 0 }
+      ],
+      "currency_symbol": "$",
+      "currency_iso": "NZD",
+      "currency_iso_with_symbol": "$NZD",
+      "ships_from": "Christchurch, New Zealand",
+      "arrives_in": [4, 8]
+    },
+    ".com.au": {
+      "tiers": [
+        { "upper_value": 40, "cost": 10 },
+        { "upper_value": 70, "cost": 7 },
+        { "upper_value": null, "cost": 0 }
+      ],
+      "currency_symbol": "$",
+      "currency_iso": "AUD",
+      "currency_iso_with_symbol": "$AUD",
+      "ships_from": "Sydney, Australia",
+      "arrives_in": [4, 8]
+    },
+    ".com": {
+      "tiers": [
+        { "upper_value": 30, "cost": 6 },
+        { "upper_value": 60, "cost": 3 },
+        { "upper_value": null, "cost": 0 }
+      ],
+      "currency_symbol": "$",
+      "currency_iso": "USD",
+      "currency_iso_with_symbol": "$USD",
+      "ships_from": "Los Angeles, USA",
+      "arrives_in": [3, 7]
+    }
+  }
+  
