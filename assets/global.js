@@ -279,12 +279,11 @@ class QuantityInput extends HTMLElement {
 
 customElements.define('quantity-input', QuantityInput);
 
-// document.addEventListener("DOMContentLoaded", () => {
-//   const shippingEl = document.querySelector(".cs-price");
-//   const totalEl = document.querySelector(".cs-total");
-//   const subtotalEl = document.querySelector(".cs-subtotal");
 
-//   // ✅ Function to format money nicely
+
+
+// document.addEventListener("DOMContentLoaded", () => {
+//   // Helper: format currency consistently
 //   function formatMoney(amount, currency = 'USD', symbol = '$') {
 //     try {
 //       return new Intl.NumberFormat(undefined, {
@@ -297,7 +296,7 @@ customElements.define('quantity-input', QuantityInput);
 //     }
 //   }
 
-//   // ✅ Function to get shipping cost based on tier
+//   // Helper: find shipping cost from tiers
 //   function getShippingCost(total, tiers) {
 //     for (const tier of tiers) {
 //       if (tier.upper_value === null || total < tier.upper_value) return tier.cost;
@@ -305,7 +304,7 @@ customElements.define('quantity-input', QuantityInput);
 //     return 0;
 //   }
 
-//   // ✅ Function to update subtotal, shipping, and total
+//   // Main function: recalc and update DOM
 //   function updateTotals() {
 //     fetch("/cart.js")
 //       .then((res) => res.json())
@@ -319,20 +318,36 @@ customElements.define('quantity-input', QuantityInput);
 //         const shippingCost = getShippingCost(subtotal, tiers);
 //         const grandTotal = subtotal + shippingCost;
 
-//         // Update DOM
-//         if (subtotalEl) subtotalEl.textContent = formatMoney(subtotal, currency, symbol);
-//         if (shippingEl) shippingEl.textContent = shippingCost === 0 ? "FREE" : formatMoney(shippingCost, currency, symbol);
-//         if (totalEl) totalEl.textContent = formatMoney(grandTotal, currency, symbol);
+//         setTimeout(() => {
+//   const shippingEl = document.querySelector(".cs-price");
+//   const totalEl = document.querySelector(".cs-total");
+//   const subtotalEl = document.querySelector(".cs-subtotal");
 
-//         // ✅ Console tracking for debugging
-//         console.log("🧮 Subtotal:", subtotal);
-//         console.log("🚚 Shipping cost (tier):", shippingCost);
-//         console.log("💰 Grand Total:", grandTotal);
+//   if (subtotalEl) subtotalEl.textContent = formatMoney(subtotal, currency, symbol);
+//   if (shippingEl) shippingEl.innerHTML = shippingCost === 0 ? "FREE" : formatMoney(shippingCost, currency, symbol);
+//   if (totalEl) totalEl.textContent = formatMoney(grandTotal, currency, symbol);
+// }, 100); // Adjust delay as needed
+
+
+//         // Re-query each time (in case DOM re-renders)
+//         // const shippingEl = document.querySelector(".cs-price");
+//         // const totalEl = document.querySelector(".cs-total");
+//         // const subtotalEl = document.querySelector(".cs-subtotal");
+
+//         // if (subtotalEl) subtotalEl.textContent = formatMoney(subtotal, currency, symbol);
+//         // if (shippingEl) shippingEl.innerHTML = shippingCost === 0 ? "FREE" : formatMoney(shippingCost, currency, symbol);
+//         // if (totalEl) totalEl.textContent = formatMoney(grandTotal, currency, symbol);
+
+//         // // ✅ Debug logs
+//         // console.clear();
+//         // console.log("🧮 Subtotal:", subtotal);
+//         // console.log("🚚 Shipping tier applied:", shippingCost);
+//         // console.log("💰 Grand Total:", grandTotal);
 //       })
 //       .catch((err) => console.error("Error fetching cart data:", err));
 //   }
 
-//   // ✅ Load your region shipping data first
+//   // Load shipping data first
 //   fetch(window.shipping_json_url)
 //     .then((res) => res.json())
 //     .then((data) => {
@@ -340,21 +355,19 @@ customElements.define('quantity-input', QuantityInput);
 //       updateTotals(); // initial load
 //     });
 
-//   // ✅ Listen for your quantity changes via Mutation or Event
-//   document.querySelectorAll("quantity-input").forEach((el) => {
-//     const input = el.querySelector("input");
-//     input.addEventListener("change", () => {
-//       setTimeout(updateTotals, 400); // wait for Shopify AJAX update
-//     });
+//   // Attach to custom quantity-input buttons
+//   document.body.addEventListener("click", (e) => {
+//     if (e.target.closest("quantity-input button")) {
+//       setTimeout(updateTotals, 700); // Wait a bit for cart.js to update
+//     }
 //   });
 
-//   // Also re-run when Shopify triggers cart updates globally
+//   // Also respond to Shopify’s built-in cart update event
 //   document.addEventListener("cart:updated", updateTotals);
 // });
 
-
 document.addEventListener("DOMContentLoaded", () => {
-  // Helper: format currency consistently
+  // ✅ Helper: format currency consistently
   function formatMoney(amount, currency = 'USD', symbol = '$') {
     try {
       return new Intl.NumberFormat(undefined, {
@@ -367,7 +380,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Helper: find shipping cost from tiers
+  // ✅ Helper: find correct tier shipping cost
   function getShippingCost(total, tiers) {
     for (const tier of tiers) {
       if (tier.upper_value === null || total < tier.upper_value) return tier.cost;
@@ -375,7 +388,24 @@ document.addEventListener("DOMContentLoaded", () => {
     return 0;
   }
 
-  // Main function: recalc and update DOM
+  // ✅ Helper: add working days for delivery range
+  function addWorkdays(startDate, daysToAdd) {
+    const endDate = new Date(startDate);
+    let added = 0;
+    while (added < daysToAdd) {
+      endDate.setDate(endDate.getDate() + 1);
+      if (endDate.getDay() !== 0 && endDate.getDay() !== 6) added++;
+    }
+    return endDate;
+  }
+
+  // ✅ Helper: format date range (e.g. "25 Oct - 29 Oct")
+  function formatDateRange(start, end) {
+    const options = { day: "numeric", month: "short" };
+    return `${start.toLocaleDateString(undefined, options)} - ${end.toLocaleDateString(undefined, options)}`;
+  }
+
+  // ✅ Core updater
   function updateTotals() {
     fetch("/cart.js")
       .then((res) => res.json())
@@ -389,55 +419,59 @@ document.addEventListener("DOMContentLoaded", () => {
         const shippingCost = getShippingCost(subtotal, tiers);
         const grandTotal = subtotal + shippingCost;
 
-        setTimeout(() => {
-          const shippingEl = document.querySelector(".cs-price");
-          const totalEl = document.querySelector(".cs-total");
-          const subtotalEl = document.querySelector(".cs-subtotal");
-        
-          if (subtotalEl) subtotalEl.textContent = formatMoney(subtotal, currency, symbol);
-          if (shippingEl) shippingEl.innerHTML = shippingCost === 0 ? "FREE" : formatMoney(shippingCost, currency, symbol);
-          if (totalEl) totalEl.textContent = formatMoney(grandTotal, currency, symbol);
-        }, 100); // Adjust delay as needed
-        
+        // Re-select DOM each time in case of re-render
+        const subtotalEl = document.querySelector(".cs-subtotal");
+        const shippingEl = document.querySelector(".cs-price");
+        const totalEl = document.querySelector(".cs-total");
+        const shipsFromEl = document.querySelector(".cs-ships-from");
+        const deliveryEl = document.querySelector(".cs-delivery");
 
-        // Re-query each time (in case DOM re-renders)
-        // const shippingEl = document.querySelector(".cs-price");
-        // const totalEl = document.querySelector(".cs-total");
-        // const subtotalEl = document.querySelector(".cs-subtotal");
+        // Update totals
+        if (subtotalEl) subtotalEl.textContent = formatMoney(subtotal, currency, symbol);
+        if (shippingEl) shippingEl.textContent = shippingCost === 0 ? "FREE" : formatMoney(shippingCost, currency, symbol);
+        if (totalEl) totalEl.textContent = formatMoney(grandTotal, currency, symbol);
 
-        // if (subtotalEl) subtotalEl.textContent = formatMoney(subtotal, currency, symbol);
-        // if (shippingEl) shippingEl.innerHTML = shippingCost === 0 ? "FREE" : formatMoney(shippingCost, currency, symbol);
-        // if (totalEl) totalEl.textContent = formatMoney(grandTotal, currency, symbol);
+        // Update ships from
+        if (shipsFromEl) shipsFromEl.textContent = domainData.ships_from;
 
-        // // ✅ Debug logs
-        // console.clear();
-        // console.log("🧮 Subtotal:", subtotal);
-        // console.log("🚚 Shipping tier applied:", shippingCost);
-        // console.log("💰 Grand Total:", grandTotal);
+        // Update delivery date range
+        if (deliveryEl && Array.isArray(domainData.arrives_in)) {
+          const today = new Date();
+          const minDays = domainData.arrives_in[0];
+          const maxDays = domainData.arrives_in[1];
+          const earliest = addWorkdays(today, minDays);
+          const latest = addWorkdays(today, maxDays);
+          deliveryEl.textContent = formatDateRange(earliest, latest);
+        }
+
+        // ✅ Debug console
+        console.clear();
+        console.log("🧮 Subtotal:", subtotal);
+        console.log("🚚 Shipping tier applied:", shippingCost);
+        console.log("🏙️ Ships From:", domainData.ships_from);
+        console.log("📦 Delivery Range:", deliveryEl ? deliveryEl.textContent : "N/A");
+        console.log("💰 Grand Total:", grandTotal);
       })
       .catch((err) => console.error("Error fetching cart data:", err));
   }
 
-  // Load shipping data first
+  // ✅ Initialize with shipping JSON
   fetch(window.shipping_json_url)
     .then((res) => res.json())
     .then((data) => {
       window.domain_shipping_rates = data[window.current_domain];
-      updateTotals(); // initial load
+      updateTotals(); // Initial
     });
 
-  // Attach to custom quantity-input buttons
+  // ✅ Listen for quantity + / - clicks and cart updates
   document.body.addEventListener("click", (e) => {
     if (e.target.closest("quantity-input button")) {
-      setTimeout(updateTotals, 700); // Wait a bit for cart.js to update
+      setTimeout(updateTotals, 700);
     }
   });
 
-  // Also respond to Shopify’s built-in cart update event
   document.addEventListener("cart:updated", updateTotals);
 });
-
-
 
 function debounce(fn, wait) {
   let t;

@@ -25,15 +25,15 @@
     },
     ".com": {
       "tiers": [
-        { "upper_value": 30, "cost": 6 },
-        { "upper_value": 60, "cost": 3 },
+        { "upper_value": 35, "cost": 6 },
+        { "upper_value": 60, "cost": 4 },
         { "upper_value": null, "cost": 0 }
       ],
       "currency_symbol": "$",
       "currency_iso": "USD",
       "currency_iso_with_symbol": "$USD",
-      "ships_from": "Los Angeles, USA",
-      "arrives_in": [3, 7]
+      "ships_from": "Adarsh Nagar, India",
+      "arrives_in": [1, 2]
     }
   }
   
